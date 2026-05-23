@@ -19,20 +19,13 @@ st.set_page_config(
 
     page_title="KFC Order Collector",
 
+    page_icon="🍗",
+
     layout="wide"
 )
 
 # =========================================
-# CREATE FOLDER
-# =========================================
-
-os.makedirs(
-    "orders",
-    exist_ok=True
-)
-
-# =========================================
-# GOOGLE SHEET CONNECTION
+# GOOGLE SHEET CONNECT
 # =========================================
 
 scope = [
@@ -42,9 +35,17 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = ServiceAccountCredentials.from_json_keyfile_name(
+# =========================================
+# STREAMLIT CLOUD SECRETS
+# =========================================
 
-    "credentials.json",
+creds_dict = dict(
+    st.secrets["gcp_service_account"]
+)
+
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+
+    creds_dict,
 
     scope
 )
@@ -56,6 +57,15 @@ client = gspread.authorize(
 sheet = client.open(
     "KFC_Orders"
 ).sheet1
+
+# =========================================
+# CREATE FOLDER
+# =========================================
+
+os.makedirs(
+    "orders",
+    exist_ok=True
+)
 
 # =========================================
 # MENU
@@ -84,7 +94,7 @@ st.title(
 )
 
 st.write("""
-Hệ thống thu thập dữ liệu order online realtime
+Hệ thống thu thập dữ liệu mua hàng realtime cho AI Recommendation System
 """)
 
 # =========================================
@@ -93,13 +103,13 @@ Hệ thống thu thập dữ liệu order online realtime
 
 customer_id = st.text_input(
 
-    "Customer ID",
+    "🧑 Customer ID",
 
     value=f"CUS_{random.randint(1000,9999)}"
 )
 
 # =========================================
-# FOOD SELECTION
+# FOOD SELECT
 # =========================================
 
 st.header(
@@ -112,24 +122,67 @@ bill_data = []
 
 total_bill = 0
 
-for food, price in MENU_PRICES.items():
+col1, col2 = st.columns(2)
 
-    quantity = st.number_input(
+foods = list(MENU_PRICES.items())
 
-        f"{food} - {price:,.0f} VNĐ",
+half = len(foods) // 2
 
-        min_value=0,
+# =========================================
+# LEFT COLUMN
+# =========================================
 
-        max_value=20,
+with col1:
 
-        step=1,
+    for food, price in foods[:half]:
 
-        key=food
-    )
+        quantity = st.number_input(
 
-    selected_items[food] = quantity
+            f"{food} - {price:,.0f} VNĐ",
+
+            min_value=0,
+
+            max_value=20,
+
+            step=1,
+
+            key=food
+        )
+
+        selected_items[food] = quantity
+
+# =========================================
+# RIGHT COLUMN
+# =========================================
+
+with col2:
+
+    for food, price in foods[half:]:
+
+        quantity = st.number_input(
+
+            f"{food} - {price:,.0f} VNĐ",
+
+            min_value=0,
+
+            max_value=20,
+
+            step=1,
+
+            key=food
+        )
+
+        selected_items[food] = quantity
+
+# =========================================
+# BILL
+# =========================================
+
+for food, quantity in selected_items.items():
 
     if quantity > 0:
+
+        price = MENU_PRICES[food]
 
         total_price = (
             quantity * price
@@ -151,7 +204,7 @@ for food, price in MENU_PRICES.items():
         })
 
 # =========================================
-# BILL
+# SHOW BILL
 # =========================================
 
 st.subheader(
@@ -166,6 +219,16 @@ if len(bill_data) > 0:
 
         use_container_width=True
     )
+
+else:
+
+    st.info(
+        "Chưa có món ăn nào được chọn"
+    )
+
+# =========================================
+# TOTAL BILL
+# =========================================
 
 st.success(
     f"💰 Tổng bill: {total_bill:,.0f} VNĐ"
@@ -187,10 +250,6 @@ if st.button(
 
     else:
 
-        # =================================
-        # CREATE ORDER
-        # =================================
-
         order_id = random.randint(
             100000,
             999999
@@ -201,6 +260,10 @@ if st.button(
         )
 
         order_data = []
+
+        # =================================
+        # CREATE ORDER DATA
+        # =================================
 
         for food, quantity in selected_items.items():
 
@@ -275,9 +338,9 @@ if st.button(
         except PermissionError:
 
             st.error("""
-            ❌ Không thể ghi file CSV
+            ❌ File CSV đang được mở
             
-            Hãy đóng file CSV trước
+            Hãy đóng file rồi thử lại
             """)
 
         # =================================
@@ -300,45 +363,55 @@ if st.button(
         except PermissionError:
 
             st.error("""
-            ❌ Không thể ghi file Excel
+            ❌ File Excel đang được mở
             
-            Hãy đóng file Excel trước
+            Hãy đóng file rồi thử lại
             """)
 
         # =================================
-        # SAVE TO GOOGLE SHEET
+        # SAVE GOOGLE SHEET
         # =================================
 
-        for row in order_data:
+        try:
 
-            sheet.append_row([
+            for row in order_data:
 
-                row["order_id"],
+                sheet.append_row([
 
-                row["customer_id"],
+                    row["order_id"],
 
-                row["food"],
+                    row["customer_id"],
 
-                row["quantity"],
+                    row["food"],
 
-                row["price"],
+                    row["quantity"],
 
-                row["total_price"],
+                    row["price"],
 
-                row["order_time"]
-            ])
+                    row["total_price"],
+
+                    row["order_time"]
+                ])
+
+            st.success("""
+            🎉 Mua hàng thành công
+            
+            ✅ Đã lưu Google Sheet
+            ✅ Đã lưu CSV
+            ✅ Đã lưu Excel
+            """)
+
+        except Exception as e:
+
+            st.error(f"""
+            ❌ Lỗi Google Sheet
+            
+            {e}
+            """)
 
         # =================================
-        # SUCCESS
+        # SHOW SAVED DATA
         # =================================
-
-        st.success("""
-        🎉 Mua hàng thành công
-        
-        ✅ Đã lưu Google Sheet
-        ✅ Đã lưu CSV
-        ✅ Đã lưu Excel
-        """)
 
         st.subheader(
             "📄 Dữ liệu vừa lưu"
@@ -352,8 +425,7 @@ if st.button(
         st.balloons()
 
         # =================================
-        # RESET
+        # RESET APP
         # =================================
 
         st.rerun()
-        st.write(sheet.get_all_records())
