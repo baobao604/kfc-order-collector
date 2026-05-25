@@ -209,7 +209,7 @@ for food, quantity in selected_items.items():
 # =========================================
 
 st.subheader(
-    "🧾 Hóa đơn"
+    "Hóa đơn"
 )
 
 if len(bill_data) > 0:
