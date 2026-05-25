@@ -19,7 +19,7 @@ st.set_page_config(
 
     page_title="KFC Order Collector",
 
-    page_icon="🍗",
+    page_icon="  ",
 
     layout="wide"
 )
@@ -90,11 +90,12 @@ MENU_PRICES = {
 # =========================================
 
 st.title(
-    "🍗 KFC ORDER COLLECTOR"
+    "HỆ THỐNG KFC ORDER"
 )
 
 st.write("""
-Hệ thống thu thập dữ liệu mua hàng realtime cho AI Recommendation System
+CÁC BẠN GIÚP TÔI LÀM PHIẾU MUA HÀNG NÀY NHÉ 
+CẢM ƠN CÁC BẠN !
 """)
 
 # =========================================
@@ -103,7 +104,7 @@ Hệ thống thu thập dữ liệu mua hàng realtime cho AI Recommendation Sys
 
 customer_id = st.text_input(
 
-    "🧑 Customer ID",
+    " Customer ID",
 
     value=f"CUS_{random.randint(1000,9999)}"
 )
@@ -113,7 +114,7 @@ customer_id = st.text_input(
 # =========================================
 
 st.header(
-    "🍔 Chọn món ăn"
+    "Hãy chọn món ăn"
 )
 
 selected_items = {}
@@ -231,7 +232,7 @@ else:
 # =========================================
 
 st.success(
-    f"💰 Tổng bill: {total_bill:,.0f} VNĐ"
+    f"Tổng bill: {total_bill:,.0f} VNĐ"
 )
 
 # =========================================
@@ -239,13 +240,13 @@ st.success(
 # =========================================
 
 if st.button(
-    "✅ Mua hàng"
+    "Mua hàng"
 ):
 
     if total_bill == 0:
 
         st.warning(
-            "⚠️ Vui lòng chọn món ăn"
+            "! Vui lòng chọn món ăn"
         )
 
     else:
@@ -338,7 +339,7 @@ if st.button(
         except PermissionError:
 
             st.error("""
-            ❌ File CSV đang được mở
+            !File CSV đang được mở
             
             Hãy đóng file rồi thử lại
             """)
@@ -363,7 +364,7 @@ if st.button(
         except PermissionError:
 
             st.error("""
-            ❌ File Excel đang được mở
+            ! File Excel đang được mở
             
             Hãy đóng file rồi thử lại
             """)
@@ -394,17 +395,16 @@ if st.button(
                 ])
 
             st.success("""
-            🎉 Mua hàng thành công
+            Mua hàng thành công
             
-            ✅ Đã lưu Google Sheet
-            ✅ Đã lưu CSV
-            ✅ Đã lưu Excel
+            Đã lưu Google Sheet
+           
             """)
 
         except Exception as e:
 
             st.error(f"""
-            ❌ Lỗi Google Sheet
+            !Lỗi Google Sheet
             
             {e}
             """)
